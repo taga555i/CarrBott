@@ -12,12 +12,12 @@ bot = telebot.TeleBot(TOKEN)
 app = Flask(__name__)
 
 
-# Принудительно устанавливаем вебхук при старте Flask
+# Принудительно устанавливаем вебхук на безопасный путь /webhook
 with app.app_context():
   try:
     bot.remove_webhook()
-    bot.set_webhook(url=f"{RENDER_URL}/{TOKEN}")
-    print("Webhook successfully set!")
+    bot.set_webhook(url=f"{RENDER_URL}/webhook")
+    print("Webhook successfully set to /webhook!")
   except Exception as e:
     print(f"Error setting webhook: {e}")
 
@@ -30,9 +30,9 @@ def home():
   return "Bot is alive and working via Webhook!", 200
 
 
-@app.route(f"/{TOKEN}", methods=["POST"])
+# Безопасный путь без двоеточий, который точно примет запросы от Telegram
+@app.route("/webhook", methods=["POST"])
 def webhook():
-  """Этот маршрут принимает сообщения от Telegram"""
   if request.headers.get("content-type") == "application/json":
     json_string = request.get_data().decode("utf-8")
     update = telebot.types.Update.de_json(json_string)
@@ -77,7 +77,7 @@ def handle_vin(message):
     part1 = f"{d1}{d4}1{d3}{d6}"
     part2 = f"{d2}{d5}"
 
-    # Оставляем только один итоговый вариант в самом низу
+    # Оставляем ровно один итоговый вариант
     code = f"{part1}0{part2}"
 
     response_text = (
