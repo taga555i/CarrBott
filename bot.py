@@ -12,6 +12,16 @@ bot = telebot.TeleBot(TOKEN)
 app = Flask(__name__)
 
 
+# Принудительно устанавливаем вебхук при старте Flask
+with app.app_context():
+  try:
+    bot.remove_webhook()
+    bot.set_webhook(url=f"{RENDER_URL}/{TOKEN}")
+    print("Webhook successfully set!")
+  except Exception as e:
+    print(f"Error setting webhook: {e}")
+
+
 # ==========================================
 # ВЕБ-СЕРВЕР И ПРИЕМ СООБЩЕНИЙ ОТ TELEGRAM
 # ==========================================
@@ -67,7 +77,7 @@ def handle_vin(message):
     part1 = f"{d1}{d4}1{d3}{d6}"
     part2 = f"{d2}{d5}"
 
-    # Формируем только один итоговый вариант
+    # Оставляем только один итоговый вариант в самом низу
     code = f"{part1}0{part2}"
 
     response_text = (
@@ -86,13 +96,5 @@ def handle_vin(message):
 # ЗАПУСК ПРИЛОЖЕНИЯ
 # ==========================================
 if __name__ == "__main__":
-  # Безопасная установка вебхука (не уронит сервер при сбое сети)
-  try:
-    bot.remove_webhook()
-    bot.set_webhook(url=f"{RENDER_URL}/{TOKEN}")
-    print("Webhook successfully set!")
-  except Exception as e:
-    print(f"Warning: Could not set webhook: {e}")
-
   port = int(os.environ.get("PORT", 5000))
   app.run(host="0.0.0.0", port=port)
