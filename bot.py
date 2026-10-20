@@ -5,13 +5,11 @@ import telebot
 # ==========================================
 # НАСТРОЙКИ
 # ==========================================
-TOKEN = "8712123830:AAFM9v0-mlHTiHPD_Xbub3aJe8MLEVD5SdA"
-# Укажите ссылку на ваш проект на Render без слеша на конце!
-# Пример: "https://my-vin-bot.onrender.com"
+TOKEN = "8712123830:AAFM9v0-mIHTiHPD_Xbub3aJe8MLEVD5SdQ"
 RENDER_URL = "https://carrbott.onrender.com"
 
 bot = telebot.TeleBot(TOKEN)
-app = Flask(_name_)
+app = Flask(__name__)
 
 
 # ==========================================
@@ -41,7 +39,7 @@ def webhook():
 def send_welcome(message):
   bot.reply_to(
       message,
-      "Привет! 🚘\nОтправь мне VIN-код машины, и я сгенерирую коды активации.",
+      "Привет! 🚘\nОтправь мне VIN-код машины, и я сгенерирую код активации.",
   )
 
 
@@ -65,19 +63,17 @@ def handle_vin(message):
     d5 = last6[4]
     d6 = last6[5]
 
-    part1 = f"{d1}{d4}0{d3}{d6}"
+    # 3-я цифра в part1 изменена с '0' на '1'
+    part1 = f"{d1}{d4}1{d3}{d6}"
     part2 = f"{d2}{d5}"
 
-    code1 = f"{part1}1{part2}"
-    code2 = f"{part1}2{part2}"
+    # Формируем только 3-й вариант ответа
     code3 = f"{part1}0{part2}"
 
     response_text = (
         f"🚘 <b>VIN:</b> {vin}\n\n"
-        f"🔑 <b>Возможные пароли активации:</b>\n"
-        f"1. <code>{code1}</code>\n"
-        f"2. <code>{code2}</code>\n"
-        f"3. <code>{code3}</code>"
+        f"🔑 <b>Пароль активации:</b>\n"
+        f"<code>{code3}</code>"
     )
 
     bot.reply_to(message, response_text, parse_mode="HTML")
@@ -89,11 +85,9 @@ def handle_vin(message):
 # ==========================================
 # ЗАПУСК ПРИЛОЖЕНИЯ
 # ==========================================
-if _name_ == "_main_":
-  # Сбрасываем старый вебхук и устанавливаем новый
+if __name__ == "__main__":
   bot.remove_webhook()
   bot.set_webhook(url=f"{RENDER_URL}/{TOKEN}")
 
-  # Запускаем Flask на порту Render
   port = int(os.environ.get("PORT", 5000))
   app.run(host="0.0.0.0", port=port)
