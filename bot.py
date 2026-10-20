@@ -1,38 +1,42 @@
 import os
-import threading
-from flask import Flask
+from flask import Flask, request
 import telebot
 
 # ==========================================
-# 1. ВЕБ-СЕРВЕР ДЛЯ RENDER (чтобы не было ошибки портов)
+# НАСТРОЙКИ
 # ==========================================
-app = Flask(__name__)
-
-
-@app.route("/")
-def home():
-  return "Bot is alive!", 200
-
-
-def run_flask():
-  port = int(os.environ.get("PORT", 5000))
-  app.run(host="0.0.0.0", port=port)
-
-
-# Запускаем Flask в фоновом потоке
-threading.Thread(target=run_flask, daemon=True).start()
-
-
-# ==========================================
-# 2. ВАШ КОД БОТА (генерация VIN)
-# ==========================================
-TOKEN = (
-    "8712123830:AAFM9v0-mlHTiHPD_Xbub3aJe8MLEVD5SdA"  # Убедитесь, что здесь указан ваш реальный токен
-)
+TOKEN = "8712123830:AAFM9v0-mlHTiHPD_Xbub3aJe8MLEVD5SdA"
+# Укажите ссылку на ваш проект на Render без слеша на конце!
+# Пример: "https://my-vin-bot.onrender.com"
+RENDER_URL = "https://carrbott.onrender.com"
 
 bot = telebot.TeleBot(TOKEN)
+app = Flask(_name_)
 
 
+# ==========================================
+# ВЕБ-СЕРВЕР И ПРИЕМ СООБЩЕНИЙ ОТ TELEGRAM
+# ==========================================
+@app.route("/")
+def home():
+  return "Bot is alive and working via Webhook!", 200
+
+
+@app.route(f"/{TOKEN}", methods=["POST"])
+def webhook():
+  """Этот маршрут принимает сообщения от Telegram"""
+  if request.headers.get("content-type") == "application/json":
+    json_string = request.get_data().decode("utf-8")
+    update = telebot.types.Update.de_json(json_string)
+    bot.process_new_updates([update])
+    return "", 200
+  else:
+    return "Forbidden", 403
+
+
+# ==========================================
+# ЛОГИКА БОТА (генерация VIN)
+# ==========================================
 @bot.message_handler(commands=["start", "help"])
 def send_welcome(message):
   bot.reply_to(
@@ -53,7 +57,6 @@ def handle_vin(message):
     return
 
   try:
-    # Точный алгоритм из вашего v7-KeyGen.bat
     last6 = vin[-6:]
     d1 = last6[0]
     d2 = last6[1]
@@ -69,7 +72,6 @@ def handle_vin(message):
     code2 = f"{part1}2{part2}"
     code3 = f"{part1}0{part2}"
 
-    # Формируем красивый ответ с тремя вариантами
     response_text = (
         f"🚘 <b>VIN:</b> {vin}\n\n"
         f"🔑 <b>Возможные пароли активации:</b>\n"
@@ -84,7 +86,14 @@ def handle_vin(message):
     bot.reply_to(message, f"❌ Произошла ошибка при расчете: {e}")
 
 
-# Запуск бота
-if __name__ == "__main__":
-  print("🚀 Бот успешно запущен и работает по алгоритму v7-KeyGen!")
-  bot.infinity_polling()
+# ==========================================
+# ЗАПУСК ПРИЛОЖЕНИЯ
+# ==========================================
+if _name_ == "_main_":
+  # Сбрасываем старый вебхук и устанавливаем новый
+  bot.remove_webhook()
+  bot.set_webhook(url=f"{RENDER_URL}/{TOKEN}")
+
+  # Запускаем Flask на порту Render
+  port = int(os.environ.get("PORT", 5000))
+  app.run(host="0.0.0.0", port=port)
