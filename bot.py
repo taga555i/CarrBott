@@ -63,17 +63,17 @@ def handle_vin(message):
     d5 = last6[4]
     d6 = last6[5]
 
-    # 3-я цифра в part1 изменена с '0' на '1'
+    # 3-я цифра заменена на '1'
     part1 = f"{d1}{d4}1{d3}{d6}"
     part2 = f"{d2}{d5}"
 
-    # Формируем только 3-й вариант ответа
-    code3 = f"{part1}0{part2}"
+    # Формируем только один итоговый вариант
+    code = f"{part1}0{part2}"
 
     response_text = (
         f"🚘 <b>VIN:</b> {vin}\n\n"
         f"🔑 <b>Пароль активации:</b>\n"
-        f"<code>{code3}</code>"
+        f"<code>{code}</code>"
     )
 
     bot.reply_to(message, response_text, parse_mode="HTML")
@@ -86,8 +86,13 @@ def handle_vin(message):
 # ЗАПУСК ПРИЛОЖЕНИЯ
 # ==========================================
 if __name__ == "__main__":
-  bot.remove_webhook()
-  bot.set_webhook(url=f"{RENDER_URL}/{TOKEN}")
+  # Безопасная установка вебхука (не уронит сервер при сбое сети)
+  try:
+    bot.remove_webhook()
+    bot.set_webhook(url=f"{RENDER_URL}/{TOKEN}")
+    print("Webhook successfully set!")
+  except Exception as e:
+    print(f"Warning: Could not set webhook: {e}")
 
   port = int(os.environ.get("PORT", 5000))
   app.run(host="0.0.0.0", port=port)
