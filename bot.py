@@ -8,7 +8,7 @@ logging.basicConfig(
     level=logging.INFO, format="%(asctime)s - %(levelname)s - %(message)s"
 )
 
-TOKEN = "8712123830:AAFM9v0-mlHTiHPD_Xbub3aJe8MLEVD5SdA"
+TOKEN = "8817276619:AAEvkaK2sYE_R1NtzhWj74SsYSEFI1MDnVM"
 RENDER_URL = "https://carrbott.onrender.com"
 
 bot = telebot.TeleBot(TOKEN)
